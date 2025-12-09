@@ -58,11 +58,11 @@ export function PersonalInfoForm() {
       }
 
       updatePersonalInfo({
-        ...(firstName && { firstName }),
-        ...(lastName && { lastName }),
-        ...(email && { email }),
-        ...(phone && { phone }),
-        ...(formattedDateOfBirth && { dateOfBirth: formattedDateOfBirth }),
+        ...(firstName !== undefined && firstName !== null && { firstName }),
+        ...(lastName !== undefined && lastName !== null && { lastName }),
+        ...(email !== undefined && email !== null && { email }),
+        ...(phone !== undefined && phone !== null && { phone }),
+        ...(formattedDateOfBirth !== undefined && formattedDateOfBirth !== null && { dateOfBirth: formattedDateOfBirth }),
       });
       return `Updated personal info successfully`;
     },

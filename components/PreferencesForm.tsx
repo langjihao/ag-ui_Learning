@@ -44,8 +44,8 @@ export function PreferencesForm() {
     ],
     handler: async ({ newsletter, notifications, language, theme }) => {
       updatePreferences({
-        ...(newsletter !== undefined && { newsletter }),
-        ...(notifications !== undefined && { notifications }),
+        ...(typeof newsletter === 'boolean' && { newsletter }),
+        ...(typeof notifications === 'boolean' && { notifications }),
         ...(language && { language }),
         ...(theme && { theme: theme as 'light' | 'dark' | 'system' }),
       });

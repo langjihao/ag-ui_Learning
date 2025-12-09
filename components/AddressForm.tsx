@@ -49,11 +49,11 @@ export function AddressForm() {
     ],
     handler: async ({ street, city, state, zipCode, country }) => {
       updateAddress({
-        ...(street && { street }),
-        ...(city && { city }),
-        ...(state && { state }),
-        ...(zipCode && { zipCode }),
-        ...(country && { country }),
+        ...(street !== undefined && street !== null && { street }),
+        ...(city !== undefined && city !== null && { city }),
+        ...(state !== undefined && state !== null && { state }),
+        ...(zipCode !== undefined && zipCode !== null && { zipCode }),
+        ...(country !== undefined && country !== null && { country }),
       });
       return `Updated address successfully`;
     },
