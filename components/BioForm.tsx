@@ -1,6 +1,8 @@
 'use client';
 
 import { useFormStore } from '@/lib/store';
+import { useCopilotReadable, useCopilotAction } from '@copilotkit/react-core';
+import { z } from 'zod';
 
 /**
  * 简介表单组件
@@ -8,6 +10,27 @@ import { useFormStore } from '@/lib/store';
  */
 export function BioForm() {
   const { data, updateBio } = useFormStore();
+
+  useCopilotReadable({
+    description: 'User Biography',
+    value: data.bio,
+  });
+
+  useCopilotAction({
+    name: 'updateBio',
+    description: 'Update the user biography text',
+    parameters: [
+      {
+        name: 'bio',
+        description: 'Biography text',
+        schema: z.string(),
+      },
+    ],
+    handler: async ({ bio }) => {
+      updateBio(bio);
+      return `Updated bio successfully`;
+    },
+  });
 
   return (
     <div className="space-y-4">

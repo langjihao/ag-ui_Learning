@@ -1,6 +1,8 @@
 'use client';
 
 import { useFormStore } from '@/lib/store';
+import { useCopilotReadable, useCopilotAction } from '@copilotkit/react-core';
+import { z } from 'zod';
 
 /**
  * 偏好设置表单组件
@@ -9,6 +11,47 @@ import { useFormStore } from '@/lib/store';
 export function PreferencesForm() {
   const { data, updatePreferences } = useFormStore();
   const { preferences } = data;
+
+  useCopilotReadable({
+    description: 'User Preferences (newsletter, notifications, language, theme)',
+    value: preferences,
+  });
+
+  useCopilotAction({
+    name: 'updatePreferences',
+    description: 'Update user preferences (newsletter, notifications, language, theme)',
+    parameters: [
+      {
+        name: 'newsletter',
+        description: 'Subscribe to newsletter',
+        schema: z.boolean().optional().nullable(),
+      },
+      {
+        name: 'notifications',
+        description: 'Enable notifications',
+        schema: z.boolean().optional().nullable(),
+      },
+      {
+        name: 'language',
+        description: 'Preferred language (en, zh, es, fr)',
+        schema: z.string().optional().nullable(),
+      },
+      {
+        name: 'theme',
+        description: 'Theme preference (light, dark, system)',
+        schema: z.enum(['light', 'dark', 'system']).optional().nullable(),
+      },
+    ],
+    handler: async ({ newsletter, notifications, language, theme }) => {
+      updatePreferences({
+        ...(newsletter !== undefined && { newsletter }),
+        ...(notifications !== undefined && { notifications }),
+        ...(language && { language }),
+        ...(theme && { theme: theme as 'light' | 'dark' | 'system' }),
+      });
+      return `Updated preferences successfully`;
+    },
+  });
 
   return (
     <div className="space-y-4">

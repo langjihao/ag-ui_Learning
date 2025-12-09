@@ -1,30 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
+import { CopilotRuntime, LangChainAdapter, copilotRuntimeNextJSAppRouterEndpoint } from "@copilotkit/runtime";
+import { ChatOpenAI } from "@langchain/openai";
 
-/**
- * CopilotKit API 路由
- * CopilotKit API Route
- * 
- * 这个路由处理 AI 助手的请求
- * This route handles AI assistant requests
- */
 export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json();
-    
-    // 这里是一个简化的实现
-    // 在实际应用中，你需要集成真正的 AI 服务（如 OpenAI）
-    // This is a simplified implementation
-    // In a real application, you would integrate with an actual AI service (like OpenAI)
-    
-    return NextResponse.json({
-      message: 'CopilotKit API endpoint',
-      received: body,
-    });
-  } catch (error) {
-    console.error('Error in copilotkit API:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
+  const model = new ChatOpenAI({
+    modelName: process.env.MODEL,
+    openAIApiKey: process.env.OPENAI_API_KEY,
+    configuration: {
+      baseURL: process.env.OPENAI_API_BASE_URL?.trim(),
+    },
+  });
+
+  const serviceAdapter = new LangChainAdapter({
+    chainFn: async ({ messages, tools }) => {
+      return model.stream(messages, { tools });
+    }
+  });
+
+  const runtime = new CopilotRuntime();
+
+  const { handleRequest } = copilotRuntimeNextJSAppRouterEndpoint({
+    runtime,
+    serviceAdapter,
+    endpoint: '/api/copilotkit',
+  });
+
+  return handleRequest(req);
 }

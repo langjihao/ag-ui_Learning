@@ -1,6 +1,8 @@
 'use client';
 
 import { useFormStore } from '@/lib/store';
+import { useCopilotReadable, useCopilotAction } from '@copilotkit/react-core';
+import { z } from 'zod';
 
 /**
  * 地址表单组件
@@ -9,6 +11,53 @@ import { useFormStore } from '@/lib/store';
 export function AddressForm() {
   const { data, updateAddress } = useFormStore();
   const { address } = data;
+
+  useCopilotReadable({
+    description: 'Address Information (street, city, state, zipCode, country)',
+    value: address,
+  });
+
+  useCopilotAction({
+    name: 'updateAddress',
+    description: 'Update address fields (street, city, state, zipCode, country)',
+    parameters: [
+      {
+        name: 'street',
+        description: 'Street address',
+        schema: z.string().optional().nullable(),
+      },
+      {
+        name: 'city',
+        description: 'City',
+        schema: z.string().optional().nullable(),
+      },
+      {
+        name: 'state',
+        description: 'State or province',
+        schema: z.string().optional().nullable(),
+      },
+      {
+        name: 'zipCode',
+        description: 'ZIP or postal code',
+        schema: z.string().optional().nullable(),
+      },
+      {
+        name: 'country',
+        description: 'Country',
+        schema: z.string().optional().nullable(),
+      },
+    ],
+    handler: async ({ street, city, state, zipCode, country }) => {
+      updateAddress({
+        ...(street && { street }),
+        ...(city && { city }),
+        ...(state && { state }),
+        ...(zipCode && { zipCode }),
+        ...(country && { country }),
+      });
+      return `Updated address successfully`;
+    },
+  });
 
   return (
     <div className="space-y-4">

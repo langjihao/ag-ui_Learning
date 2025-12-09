@@ -1,6 +1,8 @@
 'use client';
 
 import { useFormStore } from '@/lib/store';
+import { useCopilotReadable, useCopilotAction } from '@copilotkit/react-core';
+import { z } from 'zod';
 
 /**
  * 个人信息表单组件
@@ -9,6 +11,62 @@ import { useFormStore } from '@/lib/store';
 export function PersonalInfoForm() {
   const { data, updatePersonalInfo } = useFormStore();
   const { personalInfo } = data;
+
+  useCopilotReadable({
+    description: 'Personal Information (firstName, lastName, email, phone, dateOfBirth)',
+    value: personalInfo,
+  });
+
+  useCopilotAction({
+    name: 'updatePersonalInfo',
+    description: 'Update personal information fields (firstName, lastName, email, phone, dateOfBirth)',
+    parameters: [
+      {
+        name: 'firstName',
+        description: 'First name',
+        schema: z.string().optional().nullable(),
+      },
+      {
+        name: 'lastName',
+        description: 'Last name',
+        schema: z.string().optional().nullable(),
+      },
+      {
+        name: 'email',
+        description: 'Email address',
+        schema: z.string().optional().nullable(),
+      },
+      {
+        name: 'phone',
+        description: 'Phone number',
+        schema: z.string().optional().nullable(),
+      },
+      {
+        name: 'dateOfBirth',
+        description: 'Date of birth (YYYY-MM-DD)',
+        schema: z.string().optional().nullable(),
+      },
+    ],
+    handler: async ({ firstName, lastName, email, phone, dateOfBirth }) => {
+      // Ensure dateOfBirth is in YYYY-MM-DD format if provided
+      let formattedDateOfBirth = dateOfBirth;
+      if (dateOfBirth) {
+        const date = new Date(dateOfBirth);
+        if (!isNaN(date.getTime())) {
+          formattedDateOfBirth = date.toISOString().split('T')[0];
+        }
+      }
+
+      updatePersonalInfo({
+        ...(firstName && { firstName }),
+        ...(lastName && { lastName }),
+        ...(email && { email }),
+        ...(phone && { phone }),
+        ...(formattedDateOfBirth && { dateOfBirth: formattedDateOfBirth }),
+      });
+      return `Updated personal info successfully`;
+    },
+  });
 
   return (
     <div className="space-y-4">
@@ -59,7 +117,7 @@ export function PersonalInfoForm() {
 
         <div>
           <label htmlFor="phone" className="block text-sm font-medium mb-1">
-            Phone
+            Phone Number
           </label>
           <input
             id="phone"

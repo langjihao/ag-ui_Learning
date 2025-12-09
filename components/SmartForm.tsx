@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useCopilotAction, useCopilotReadable } from '@copilotkit/react-core';
+import { useCopilotAction } from '@copilotkit/react-core';
 import { useFormStore } from '@/lib/store';
 import { PersonalInfoForm } from './PersonalInfoForm';
 import { AddressForm } from './AddressForm';
@@ -18,180 +18,10 @@ import { BioForm } from './BioForm';
 export function SmartForm() {
   const {
     data,
-    updatePersonalInfo,
-    updateAddress,
-    updatePreferences,
-    updateBio,
     resetForm,
   } = useFormStore();
   
   const [showJson, setShowJson] = useState(false);
-
-  // 让 AI 能够读取表单状态
-  // Make form state readable by AI
-  useCopilotReadable({
-    description: 'The current form data including personal info, address, preferences, and bio',
-    value: data,
-  });
-
-  // 定义 AI 可以执行的操作：更新个人信息
-  // Define AI action: update personal information
-  useCopilotAction({
-    name: 'updatePersonalInfo',
-    description: 'Update personal information fields (firstName, lastName, email, phone, dateOfBirth)',
-    parameters: [
-      {
-        name: 'firstName',
-        type: 'string',
-        description: 'First name',
-        required: false,
-      },
-      {
-        name: 'lastName',
-        type: 'string',
-        description: 'Last name',
-        required: false,
-      },
-      {
-        name: 'email',
-        type: 'string',
-        description: 'Email address',
-        required: false,
-      },
-      {
-        name: 'phone',
-        type: 'string',
-        description: 'Phone number',
-        required: false,
-      },
-      {
-        name: 'dateOfBirth',
-        type: 'string',
-        description: 'Date of birth (YYYY-MM-DD)',
-        required: false,
-      },
-    ],
-    handler: async ({ firstName, lastName, email, phone, dateOfBirth }) => {
-      updatePersonalInfo({
-        ...(firstName && { firstName }),
-        ...(lastName && { lastName }),
-        ...(email && { email }),
-        ...(phone && { phone }),
-        ...(dateOfBirth && { dateOfBirth }),
-      });
-      return `Updated personal info successfully`;
-    },
-  });
-
-  // 定义 AI 可以执行的操作：更新地址
-  // Define AI action: update address
-  useCopilotAction({
-    name: 'updateAddress',
-    description: 'Update address fields (street, city, state, zipCode, country)',
-    parameters: [
-      {
-        name: 'street',
-        type: 'string',
-        description: 'Street address',
-        required: false,
-      },
-      {
-        name: 'city',
-        type: 'string',
-        description: 'City',
-        required: false,
-      },
-      {
-        name: 'state',
-        type: 'string',
-        description: 'State or province',
-        required: false,
-      },
-      {
-        name: 'zipCode',
-        type: 'string',
-        description: 'ZIP or postal code',
-        required: false,
-      },
-      {
-        name: 'country',
-        type: 'string',
-        description: 'Country',
-        required: false,
-      },
-    ],
-    handler: async ({ street, city, state, zipCode, country }) => {
-      updateAddress({
-        ...(street && { street }),
-        ...(city && { city }),
-        ...(state && { state }),
-        ...(zipCode && { zipCode }),
-        ...(country && { country }),
-      });
-      return `Updated address successfully`;
-    },
-  });
-
-  // 定义 AI 可以执行的操作：更新偏好设置
-  // Define AI action: update preferences
-  useCopilotAction({
-    name: 'updatePreferences',
-    description: 'Update user preferences (newsletter, notifications, language, theme)',
-    parameters: [
-      {
-        name: 'newsletter',
-        type: 'boolean',
-        description: 'Subscribe to newsletter',
-        required: false,
-      },
-      {
-        name: 'notifications',
-        type: 'boolean',
-        description: 'Enable notifications',
-        required: false,
-      },
-      {
-        name: 'language',
-        type: 'string',
-        description: 'Preferred language (en, zh, es, fr)',
-        required: false,
-      },
-      {
-        name: 'theme',
-        type: 'string',
-        description: 'Theme preference (light, dark, system)',
-        required: false,
-      },
-    ],
-    handler: async ({ newsletter, notifications, language, theme }) => {
-      updatePreferences({
-        ...(newsletter !== undefined && { newsletter }),
-        ...(notifications !== undefined && { notifications }),
-        ...(language && { language }),
-        ...(theme && { theme: theme as 'light' | 'dark' | 'system' }),
-      });
-      return `Updated preferences successfully`;
-    },
-  });
-
-  // 定义 AI 可以执行的操作：更新简介
-  // Define AI action: update bio
-  useCopilotAction({
-    name: 'updateBio',
-    description: 'Update the user biography text',
-    parameters: [
-      {
-        name: 'bio',
-        type: 'string',
-        description: 'Biography text',
-        required: true,
-      },
-    ],
-    handler: async ({ bio }) => {
-      updateBio(bio);
-      return `Updated bio successfully`;
-    },
-  });
 
   // 定义 AI 可以执行的操作：重置表单
   // Define AI action: reset form
