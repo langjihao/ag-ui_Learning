@@ -201,6 +201,86 @@ npm start
 - 组件使用函数式组件和 Hooks
 - 使用 JSDoc 注释提供中英文说明
 
+### 高级架构扩展 / Advanced Architecture Extension
+
+本项目目前展示了前端与 AI 的交互。若要实现更复杂的后端能力（如数据库查询、RAG/知识库检索、MCP 操作），可以通过扩展 `app/api/copilotkit/route.ts` 中的 `CopilotRuntime` 来实现。
+
+The project currently demonstrates frontend-AI interaction. To implement more complex backend capabilities (such as database queries, RAG/Knowledge Base retrieval, MCP operations), you can extend the `CopilotRuntime` in `app/api/copilotkit/route.ts`.
+
+#### 架构图 / Architecture Diagram
+
+```mermaid
+graph TD
+    User[User / Frontend] <-->|useCopilotAction| CopilotKit[CopilotKit Runtime]
+    CopilotKit <-->|LangChain Adapter| LLM[LLM (OpenAI/Anthropic)]
+    
+    subgraph Backend Actions [Backend Capabilities]
+        CopilotKit -->|Action: fetchServerLogs| DB[(Database)]
+        CopilotKit -->|Action: searchKnowledgeBase| VectorDB[(Vector DB / RAG)]
+        CopilotKit -->|Action: mcpTool| MCPServer[MCP Server]
+    end
+```
+
+#### 实现示例 / Implementation Example
+
+在 `app/api/copilotkit/route.ts` 中配置 `actions`：
+
+Configure `actions` in `app/api/copilotkit/route.ts`:
+
+```typescript
+// app/api/copilotkit/route.ts
+import { CopilotRuntime } from "@copilotkit/runtime";
+
+// ...
+
+const runtime = new CopilotRuntime({
+  actions: [
+    // 1. 数据库查询示例 / Database Query Example
+    {
+      name: "fetchUserOrders",
+      description: "Fetch order history for the current user from the database",
+      parameters: [
+        { name: "limit", type: "number", description: "Max number of orders to fetch" }
+      ],
+      handler: async ({ limit }) => {
+        // const orders = await db.query("SELECT * FROM orders LIMIT ?", [limit]);
+        return JSON.stringify({ orders: [] }); // Mock response
+      }
+    },
+    
+    // 2. 知识库检索 (RAG) 示例 / Knowledge Base (RAG) Example
+    {
+      name: "searchPolicy",
+      description: "Search company policies in the knowledge base",
+      parameters: [
+        { name: "query", type: "string", description: "Search query" }
+      ],
+      handler: async ({ query }) => {
+        // const docs = await vectorStore.similaritySearch(query);
+        return "Policy: All forms must be filled in English."; // Mock response
+      }
+    },
+    
+    // 3. MCP 工具集成示例 / MCP Tool Integration Example
+    {
+      name: "checkServerStatus",
+      description: "Check the status of a remote server via MCP",
+      parameters: [
+        { name: "serverId", type: "string" }
+      ],
+      handler: async ({ serverId }) => {
+        // Call your MCP client here
+        return `Server ${serverId} is ONLINE`;
+      }
+    }
+  ]
+});
+```
+
+通过这种方式，你可以将任何后端逻辑封装为 AI 可调用的工具，从而极大地扩展 Agent 的能力边界。
+
+By doing this, you can encapsulate any backend logic as tools callable by the AI, thereby greatly expanding the capabilities of the Agent.
+
 ### 许可证 / License
 
 MIT
