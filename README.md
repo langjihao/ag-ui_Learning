@@ -6,6 +6,14 @@
 
 This is a demo project for learning ag-ui and CopilotKit, showcasing how to implement a smart form-filling assistant with shared state between UI components and AI Agent.
 
+### 演示截图 / Screenshots
+
+![Smart Form Assistant](https://github.com/user-attachments/assets/9f3eff58-1c14-4a1d-b7fd-3bbf75981685)
+*智能表单界面 / Smart Form Interface*
+
+![Form with Data and JSON State](https://github.com/user-attachments/assets/8334c27f-c22c-45c8-9d70-1b98ca9aa024)
+*表单数据和 JSON 状态视图 / Form Data and JSON State View*
+
 ### 功能特性 / Features
 
 - ✅ **TypeScript 规范开发** - 完整的类型定义和类型安全
@@ -64,6 +72,38 @@ npm run dev
 3. **打开浏览器 / Open browser**
 
 访问 [http://localhost:3000](http://localhost:3000)
+
+### AI 集成配置（可选）/ AI Integration Setup (Optional)
+
+当前项目使用的是 CopilotKit 的基础配置。要启用完整的 AI 功能，你需要：
+
+Currently, the project uses CopilotKit's basic configuration. To enable full AI capabilities, you need to:
+
+1. **复制环境变量模板 / Copy environment template**
+
+```bash
+cp .env.example .env
+```
+
+2. **配置 AI 服务 / Configure AI service**
+
+在 `.env` 文件中填入你的 API 密钥（如使用 OpenAI）：
+
+Fill in your API keys in the `.env` file (e.g., for OpenAI):
+
+```
+OPENAI_API_KEY=your_openai_api_key_here
+```
+
+3. **更新 API 路由 / Update API route**
+
+修改 `app/api/copilotkit/route.ts` 以集成真实的 AI 服务。参考 [CopilotKit 文档](https://docs.copilotkit.ai/)。
+
+Modify `app/api/copilotkit/route.ts` to integrate with a real AI service. Refer to [CopilotKit Documentation](https://docs.copilotkit.ai/).
+
+> **注意 / Note**: 即使没有配置 AI 后端，你仍然可以看到完整的 UI 和状态管理系统的工作方式。所有的 AI Actions 已经定义好，只需要连接真实的 AI 服务即可使用。
+>
+> Even without configuring an AI backend, you can still see how the complete UI and state management system works. All AI Actions are already defined and just need to be connected to a real AI service.
 
 ### 使用说明 / Usage
 
