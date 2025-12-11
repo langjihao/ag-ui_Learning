@@ -6,27 +6,30 @@ import type { FormState, FormData } from '@/types/form';
  * Initial form data
  */
 const initialFormData: FormData = {
-  personalInfo: {
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    dateOfBirth: '',
+  basicInfo: {
+    bnNo: 'BN-' + Date.now(), // Simple auto-generation for demo
+    project: '',
+    model: '',
+    description: '',
+    customer: '',
+    customerPn: '',
+    pcbPn: '',
+    stage: '',
+    buildQty: 0,
+    buildDate: new Date().toISOString().split('T')[0],
+    cimFile: '',
+    remark: '',
   },
-  address: {
-    street: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: '',
+  roleSettings: {
+    epe: '',
+    sl: '',
+    mpe: '',
+    fw: '',
+    rd: '',
+    te: '',
+    epm: '',
+    mpm: '',
   },
-  preferences: {
-    newsletter: false,
-    notifications: true,
-    language: 'en',
-    theme: 'system',
-  },
-  bio: '',
 };
 
 /**
@@ -39,44 +42,25 @@ const initialFormData: FormData = {
 export const useFormStore = create<FormState>((set) => ({
   data: initialFormData,
   
-  updatePersonalInfo: (info) =>
+  updateBasicInfo: (info) =>
     set((state) => ({
       data: {
         ...state.data,
-        personalInfo: {
-          ...state.data.personalInfo,
+        basicInfo: {
+          ...state.data.basicInfo,
           ...info,
         },
       },
     })),
   
-  updateAddress: (address) =>
+  updateRoleSettings: (roles) =>
     set((state) => ({
       data: {
         ...state.data,
-        address: {
-          ...state.data.address,
-          ...address,
+        roleSettings: {
+          ...state.data.roleSettings,
+          ...roles,
         },
-      },
-    })),
-  
-  updatePreferences: (prefs) =>
-    set((state) => ({
-      data: {
-        ...state.data,
-        preferences: {
-          ...state.data.preferences,
-          ...prefs,
-        },
-      },
-    })),
-  
-  updateBio: (bio) =>
-    set((state) => ({
-      data: {
-        ...state.data,
-        bio,
       },
     })),
   

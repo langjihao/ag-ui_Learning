@@ -12,6 +12,7 @@
     "@copilotkit/react-core": "^1.3.0",
     "@copilotkit/react-ui": "^1.3.0",
     "@copilotkit/runtime": "^1.3.0",
+    "@langchain/openai": "^1.1.3",
     "ag-grid-community": "^32.3.2",
     "ag-grid-react": "^32.3.2",
     "next": "^15.0.0",

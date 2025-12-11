@@ -3,10 +3,8 @@
 import { useState } from 'react';
 import { useCopilotAction } from '@copilotkit/react-core';
 import { useFormStore } from '@/lib/store';
-import { PersonalInfoForm } from './PersonalInfoForm';
-import { AddressForm } from './AddressForm';
-import { PreferencesForm } from './PreferencesForm';
-import { BioForm } from './BioForm';
+import { BasicInfoForm } from './BasicInfoForm';
+import { RoleSettingsForm } from './RoleSettingsForm';
 
 /**
  * 智能表单组件
@@ -38,24 +36,20 @@ export function SmartForm() {
   return (
     <div className="w-full max-w-4xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Smart Form Assistant</h1>
+        <h1 className="text-3xl font-bold mb-2">Build Notice Process System</h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Fill out this form manually or ask the AI assistant to help you!
+          Create a new Build Notice. You can fill this form manually or ask the AI assistant to help you!
         </p>
         <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-          Try asking: &quot;Fill my name as John Doe&quot;, &quot;Set my email to john@example.com&quot;, 
-          &quot;I live in New York&quot;, &quot;Enable newsletter subscription&quot;
+          Try asking: &quot;Set project to ProjectX&quot;, &quot;Assign John Doe as EPE&quot;, 
+          &quot;Set build quantity to 100&quot;, &quot;Set stage to EVT&quot;
         </p>
       </div>
 
       <div className="space-y-8 bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6">
-        <PersonalInfoForm />
+        <BasicInfoForm />
         <hr className="border-gray-200 dark:border-gray-700" />
-        <AddressForm />
-        <hr className="border-gray-200 dark:border-gray-700" />
-        <PreferencesForm />
-        <hr className="border-gray-200 dark:border-gray-700" />
-        <BioForm />
+        <RoleSettingsForm />
         
         <div className="flex gap-4 pt-4">
           <button
