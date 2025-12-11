@@ -1,0 +1,153 @@
+{
+  "name": "agui",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/agent/message",
+        "responseMode": "streaming",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        0
+      ],
+      "id": "1f540f9d-3abf-4a52-8faf-efeae501322e",
+      "name": "Webhook",
+      "webhookId": "fcaddf80-2f61-4fc3-9459-07e34df2d720"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "Qwen3-32B",
+          "mode": "list",
+          "cachedResultName": "Qwen3-32B"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -144,
+        256
+      ],
+      "id": "c8db7d16-7da0-4d2d-b758-df3f23ad400d",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "SbNnZamaDHe69B4X",
+          "name": "公司内部"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body;\n\n// 1. 解构所有顶层字段\nconst { chatInput, sessionId, appState,userInfo, tools,hitlResponse, hitlRequest } = body;\nlet dwftools = {}\nlet hitltools = {}\n\nif(tools && Object.keys(tools).length > 0){\n  const {dwftools:dwf ,hitltools:hitl} = tools\n  dwftools = dwf\n  hitltools = hitl\n}\n\n// 2. 准备新的输出对象\nconst outputData = {\n    chatInput,\n    sessionId,\n    // 3. 提取整个嵌套对象，无需逐个映射\n    appState:appState,\n    dwftools,\n    hitltools,\n    userInfo,\n    hitlResponse,\n    hitlRequest\n};\n\n\n// 返回给下一个节点\nreturn [{\n    json: {\n        ...outputData\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        0
+      ],
+      "id": "1cef5496-5c32-470d-8cce-0a4cdae4c8dd",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Code in JavaScript').item.json.sessionId }}",
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        336,
+        208
+      ],
+      "id": "2072627b-028f-49cb-b7c7-4d99b1f6484c",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是一个智能 AGUI 助手。你的目标是根据用户的输入、当前页面状态以及用户是否正在回应一个 HITL (Human-In-The-Loop) 请求来生成响应。\n\n请使用 Markdown 语法进行格式化。\n\n**当前登录用户的信息**\n{{ $json.appState.userInfo.toJsonString() || {}  }}\n**用户所在页面:**\n{{$json.appState.currentPage}}\n\n**所在的页面数据:**\n{{$json.appState.pageData.toJsonString()}}\n\n**该页面支持的 HITL actions 有:**\n{{ $json.hitltools ? $json.hitltools.toJsonString() : '无可用 HITL actions'}}\n\n**该页面提供的可调用的前台函数 (dwftools) 有:**\n{{ $json.dwftools ? $json.dwftools.toJsonString() : '无可用 dwftools'}}\n\n**当前 HITL 请求上下文 (如果存在):**\n{{ $json.hitlRequest ? $json.hitlRequest.toJsonString() : '无' }}\n\n## 用户输入:\n{{ $json.chatInput || '' }}\n\n---\n\n### 你的任务逻辑\n\n你需要分析用户的意图，并严格按照以下优先级和格式生成响应：\n\n#### 1. 处理 HITL 确认 (最高优先级)\n如果 **HITL 上下文 (`$json.hitlRequest`)** 存在，且用户的输入表明 **\"确认\"** (例如 \"confirmed\", \"是\", \"确认\", \"OK\", \"Proceed\")：\n你需要生成一个 **TOOL CALL**，执行 `{{$json.hitlRequest && $json.hitlRequest.action || ''}}`，并传入 `{{$json.hitlRequest && $json.hitlRequest.data || ''}}` 中的所有参数。这是执行操作的唯一机会。\n\n**必须严格遵守以下 JSON 格式返回 (不要包含 Markdown 代码块标记,也不要在该类型的json代码中添加任何注释):**\n```json\n{\n  \"message\": \"用户已确认，正在执行操作...\",\n  \"action\": \"{{ ($json.hitlRequest && $json.hitlRequest.action) || 'error_action' }}\",\n  \"data\": { \n      \"id\": {{ ($json.hitlRequest && $json.hitlRequest.data && $json.hitlRequest.data.id) ? JSON.stringify($json.hitlRequest.data.id) : 'null' }} \n  }\n}\n```\n*重要提示：为避免 `[object Object]` 错误，你需要手动从 `$json.hitlRequest.data` 中提取 `id` 的值，并确保其格式正确（带引号的字符串或 JSON 数组）。*\n\n如果用户的输入表明 **\"取消\"**，请返回一段普通文本，告知用户操作已取消。\n\n#### 2. 发起 HITL 请求 (敏感操作)\n如果用户请求执行 **hitltoos** 中的敏感操作（例如 \"删除\", \"修改关键数据\"）：\n不要直接执行。而是返回一个 JSON 对象来发起 HITL 确认请求。\n\n**输出格式 (JSON):**\n```json\n{\n  \"hitl\": true,\n  \"message\": \"您确定要执行此操作吗？\",\n  \"action\": \"目标Action名称\",\n  \"data\": { ...参数... }\n}\n```\n\n#### 3. 调用前台函数 (dwftools)\n如果用户的意图可以通过 **dwftools** 中的函数实现（例如 \"新增一行\", \"刷新列表\"）：\n返回一个 JSON 对象来调用该函数。\n\n**输出格式 (JSON):**\n```json\n{\n  \"action\": \"函数名 (例如 addRow)\",\n  \"data\": { ...参数... }\n}\n```\n\n#### 4. (*重要)普通聊天/查询\n如果用户的意图是询问信息、闲聊或不涉及上述操作：\n直接返回 Markdown 格式的文本回答。\n\n**其他要求:**\n- `ptype` 是关键的必填项, 请确保用户输入的 `ptype` 是有效的。系统支持的 `ptype` 类型, 请使用工具查询 DB。因为页面上的可能不全。\n- 新增时你可以根据相似数据(根据工具查询)来推测要回填至表单的数据。",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": ""
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        32,
+        -16
+      ],
+      "id": "5723ffea-42cb-489a-8393-39ce6a19f5d8",
+      "name": "AI Agent"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d52808d0-3dd6-4b2a-b1a9-b58d005dd8d6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a9bc9e3407fe0168ca560b8022324f491da817d62f394883c435ffd8b0765dad"
+  },
+  "id": "83g7CgH9ibCGMo9p",
+  "tags": []
+}

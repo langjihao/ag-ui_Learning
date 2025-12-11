@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent 框架深度评估：开发者与鲁棒性视角</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Phosphor Icons for technical symbols -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #334155; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Modern Card Styling */
+        .tech-card { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid #e2e8f0; }
+        .tech-card:hover { transform: translateY(-2px); border-color: #3b82f6; box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.1); }
+        .tech-card.active { border-left: 4px solid #3b82f6; background-color: #eff6ff; border-color: #bfdbfe; }
+        
+        /* Chart Container */
+        .chart-container { position: relative; width: 100%; height: 280px; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Badge Styles */
+        .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+        .badge-blue { bg-blue-50 text-blue-700 border border-blue-200; }
+    </style>
+    <!-- 
+      Update Log:
+      - Added 'version' and 'releaseDate' to data model.
+      - Added 'asyncModel' and 'retryLogic' to data model.
+      - Redesigned Detail Panel to include a "Robustness & Architecture" section.
+    -->
+</head>
+<body class="h-screen flex overflow-hidden">
+
+    <!-- Sidebar (Filters) -->
+    <aside class="w-64 bg-slate-900 text-slate-300 flex flex-col flex-shrink-0 shadow-2xl z-20">
+        <div class="p-6 border-b border-slate-700">
+            <h1 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                <i class="ph ph-robot text-blue-400"></i> Agent<span class="text-blue-400">Dev</span>
+            </h1>
+            <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-widest">Factory Edition v2.0</p>
+        </div>
+        
+        <div class="p-4 flex-grow overflow-y-auto space-y-6">
+            <div>
+                <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-3">技术栈筛选</h3>
+                <div class="space-y-1" id="persona-filters">
+                    <!-- Filters injected via JS -->
+                </div>
+            </div>
+            
+            <div class="bg-slate-800/50 p-3 rounded border border-slate-700">
+                <h4 class="text-[10px] text-slate-400 font-bold mb-2">本次调研基准</h4>
+                <div class="flex justify-between text-[10px] text-slate-500 mb-1">
+                    <span>截止时间:</span>
+                    <span class="text-slate-300">2025.Q1</span>
+                </div>
+                <div class="flex justify-between text-[10px] text-slate-500">
+                    <span>环境:</span>
+                    <span class="text-slate-300">Python 3.11+ / Node 20</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 border-t border-slate-700 bg-slate-800 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-xs">Dev</div>
+            <div class="flex-1">
+                <div class="text-xs font-medium text-white">开发者视角</div>
+                <div class="text-[10px] text-slate-400">鲁棒性深度评估</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col min-w-0 bg-slate-50 overflow-hidden">
+        
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-8 shadow-sm z-10">
+            <div>
+                <h2 class="text-lg font-bold text-slate-800">框架成熟度评估看板</h2>
+                <p class="text-xs text-slate-500">重点关注：异步并发处理、异常重试机制、调试工具链</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                 <span class="text-xs bg-slate-100 text-slate-600 px-3 py-1.5 rounded-full border border-slate-200 font-mono">
+                    Total: <span id="count-badge" class="font-bold text-slate-900">0</span>
+                 </span>
+            </div>
+        </header>
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto p-6 lg:p-8">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <!-- Left: List & Macro Viz -->
+                <div class="lg:col-span-5 space-y-6">
+                    
+                    <!-- Macro View: Complexity vs Ecosystem -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                        <div class="flex justify-between items-end mb-4 pl-2">
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-sm">生态成熟度矩阵</h3>
+                                <p class="text-[10px] text-slate-400 mt-1">Y轴: 生态完备性 (工具链/社区) <br>X轴: 上手复杂度 (代码量/抽象度)</p>
+                            </div>
+                        </div>
+                        <div class="chart-container h-56">
+                            <canvas id="scatterChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- List -->
+                    <div class="space-y-3" id="framework-list">
+                        <!-- Items injected via JS -->
+                    </div>
+                </div>
+
+                <!-- Right: Deep Technical Detail Panel -->
+                <div class="lg:col-span-7">
+                    <div id="detail-panel" class="bg-white rounded-xl border border-slate-200 shadow-lg sticky top-6 min-h-[600px] flex flex-col">
+                        
+                        <!-- Panel Header & Metadata -->
+                        <div class="p-6 border-b border-slate-100 bg-slate-50/50 rounded-t-xl">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <div class="flex items-center gap-3 mb-1">
+                                        <h2 id="detail-title" class="text-2xl font-bold text-slate-900 tracking-tight">--</h2>
+                                        <span id="detail-stars" class="flex items-center gap-1 text-xs font-mono bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded border border-yellow-200">
+                                            <i class="ph-fill ph-star"></i> --
+                                        </span>
+                                    </div>
+                                    <p id="detail-desc" class="text-slate-600 text-sm">--</p>
+                                </div>
+                                <div class="text-right flex flex-col items-end">
+                                    <div class="inline-flex items-center gap-2 bg-white border border-slate-200 rounded px-2 py-1 shadow-sm mb-1">
+                                        <span class="text-[10px] text-slate-400 uppercase font-bold">Version</span>
+                                        <span id="detail-ver" class="text-xs font-mono font-bold text-blue-600">--</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-400">
+                                        Last Major Release: <span id="detail-date" class="font-medium text-slate-600">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Tags -->
+                            <div id="detail-tags" class="flex flex-wrap gap-2"></div>
+                        </div>
+
+                        <!-- Panel Body -->
+                        <div class="p-6 space-y-8 flex-1 overflow-y-auto">
+                            
+                            <!-- 1. Maturity & Robustness (NEW FOCUS) -->
+                            <section>
+                                <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                    <i class="ph ph-shield-check text-green-600 text-lg"></i> 
+                                    框架完善度与鲁棒性
+                                </h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <!-- Async Model -->
+                                    <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                                        <div class="text-[10px] text-slate-500 uppercase tracking-wide mb-1">异步/并发模型 (Async)</div>
+                                        <div id="detail-async" class="text-sm font-medium text-slate-800 leading-snug">--</div>
+                                    </div>
+                                    <!-- Retry Logic -->
+                                    <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                                        <div class="text-[10px] text-slate-500 uppercase tracking-wide mb-1">异常重试机制 (Retry)</div>
+                                        <div id="detail-retry" class="text-sm font-medium text-slate-800 leading-snug">--</div>
+                                    </div>
+                                    <!-- Debug Tools -->
+                                    <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                                        <div class="text-[10px] text-slate-500 uppercase tracking-wide mb-1">调试与观测 (Observability)</div>
+                                        <div id="detail-debug" class="text-sm font-medium text-slate-800 leading-snug">--</div>
+                                    </div>
+                                    <!-- Deploy -->
+                                    <div class="bg-slate-50 p-3 rounded border border-slate-200">
+                                        <div class="text-[10px] text-slate-500 uppercase tracking-wide mb-1">部署运维难度</div>
+                                        <div id="detail-deploy" class="text-sm font-medium text-slate-800 leading-snug">--</div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- 2. Factory Implementation (Code View) -->
+                            <section>
+                                <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                    <i class="ph ph-factory text-blue-600 text-lg"></i> 
+                                    工厂实战：技术实现
+                                </h4>
+                                <div class="bg-white border border-slate-200 rounded-lg overflow-hidden">
+                                    <div class="bg-slate-50 px-4 py-2 border-b border-slate-200 flex justify-between items-center">
+                                        <h5 id="case-title" class="font-bold text-slate-700 text-sm">--</h5>
+                                        <span class="text-[10px] text-slate-400 font-mono">pseudocode.py</span>
+                                    </div>
+                                    <div class="p-4">
+                                        <p id="case-desc" class="text-sm text-slate-600 mb-4 leading-relaxed">--</p>
+                                        <div class="bg-[#1e1e1e] rounded p-3 overflow-x-auto shadow-inner">
+                                            <pre id="case-code" class="font-mono text-xs text-gray-300 leading-5">--</pre>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- 3. Radar Chart -->
+                            <section>
+                                <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2">能力多维评分</h4>
+                                <div class="chart-container h-52">
+                                    <canvas id="radarChart"></canvas>
+                                </div>
+                            </section>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- Data Store ---
+        // Enhanced with 'ver', 'releaseDate', 'asyncModel', 'retryLogic'
+        const frameworks = [
+            {
+                id: 'langchain',
+                name: 'LangChain / LangGraph',
+                ver: 'v0.3.x',
+                releaseDate: '2024.12',
+                stars: '95k+',
+                desc: '工业界事实标准的编排框架。LangGraph 解决了早期 LangChain 状态管理混乱的问题。',
+                persona: 'Python 架构师 / 高级后端。需要完全控制状态流转、断点续传的复杂业务场景。',
+                stack: 'Python, JS/TS',
+                
+                // Maturity & Robustness
+                asyncModel: '原生支持 Python asyncio。LangGraph 节点可并行执行，支持流式输出 (Streaming) 以降低首字延迟。',
+                retryLogic: '极强。1. 基于图循环(Cycle)的重试逻辑；2. Checkpoint 持久化机制支持在报错节点人工修正后"时光倒流"重试；3. `with_retry` 装饰器级重试。',
+                debugTool: 'LangSmith (SaaS/Self-hosted) - 业界最强的 Trace 可视化。',
+                deployDiff: 'High - 需维护 API Server 和 Postgres (用于 State Checkpoint)。',
+                
+                ecosystemScore: 95,
+                complexity: 90, 
+                metrics: [95, 95, 90, 50, 85], // [Ecosystem, Flexibility, Tooling, Ease, RAG]
+                
+                caseTitle: '设备故障诊断状态机 (State Machine)',
+                caseCode: `
+# LangGraph 异常处理示意
+def check_sensor(state):
+    try:
+        data = plc_client.read_async("sensor_1")
+        return {"status": "ok", "data": data}
+    except PLCConnectionError:
+        # 返回重试状态，Graph 自动路由回当前节点
+        return {"status": "retry", "retry_count": state.count + 1}
+
+graph.add_node("sensor", check_sensor)
+graph.add_conditional_edges("sensor", should_retry_logic)
+# 优势: 网络抖动不会导致整个工单崩溃
+                `.trim(),
+                caseDesc: '构建一个 7x24 小时运行的监控 Agent。利用 LangGraph 的持久化能力，即使服务器重启，Agent 也能从上一个断点（Checkpoint）恢复上下文，继续执行诊断流程。',
+                tags: ['Orchestration', 'Stateful', 'Production']
+            },
+            {
+                id: 'agno',
+                name: 'Agno (原 Phidata)',
+                ver: 'v2.0',
+                releaseDate: '2025.01',
+                stars: '14k+',
+                desc: '轻量级、Pythonic 的框架，强调 Memory 和 Tool 的原生数据库集成。',
+                persona: 'Python 全栈 / 独立开发者。厌恶过度抽象，喜欢直接控制 Pydantic 模型。',
+                stack: 'Python',
+
+                // Maturity & Robustness
+                asyncModel: '完全支持 Async 工具调用。代码结构简洁，不依赖复杂的 Chain 封装，直接使用 Python 的 async/await。',
+                retryLogic: '代码级控制。通常依赖 LLM 自身的自我修正 (Self-Correction) Prompt，或者在 Tool 定义中显式编写 Python try/except 逻辑。缺乏类似 LangGraph 的内置状态回滚机制。',
+                debugTool: 'Agno UI (Local) - 本地运行的简单 Playground，不如 LangSmith 详细。',
+                deployDiff: 'Medium - 强依赖 Docker 化的向量库/数据库作为记忆存储。',
+
+                ecosystemScore: 65,
+                complexity: 40,
+                metrics: [65, 80, 60, 85, 75],
+
+                caseTitle: '具备长期记忆的产线助手',
+                caseCode: `
+# Agno 记忆存储示意
+agent = Agent(
+    storage=PgAgentStorage(db_url="postgresql://..."),
+    tools=[check_inventory_async],
+    show_tool_calls=True
+)
+# 优势: 自动将 Session History 存入 Postgres
+# 晚班班长能看到早班班长与 AI 的交互记录
+                `.trim(),
+                caseDesc: '为倒班人员设计的助手。核心优势是将会话历史 (Memory) 作为一等公民，自动持久化到 PostgreSQL。当早班工人记录了某个异响，晚班工人接手时，Agent 会自动关联该历史信息，无需重复输入。',
+                tags: ['Memory-First', 'Lightweight', 'Database']
+            },
+            {
+                id: 'n8n',
+                name: 'n8n',
+                ver: 'v1.75+',
+                releaseDate: '2025.01',
+                stars: '45k+',
+                desc: '可视化工作流自动化平台，通过 LangChain 节点集成了 AI 能力。',
+                persona: '运维 (DevOps) / IT 支持。偏好低代码拖拽，擅长 API 集成。',
+                stack: 'Node.js / No-Code',
+
+                // Maturity & Robustness
+                asyncModel: 'Node.js 事件驱动模型。每个节点执行是异步的。支持 "Wait" 节点处理长时间运行的任务（如等待人工审批）。',
+                retryLogic: '配置级重试。每个节点 UI 设置中可直接开启 "Retry on Fail" (例如：重试 3 次，间隔 5 秒)。支持 "Error Trigger" 节点，当流失败时自动触发另一条报警流。',
+                debugTool: 'Visual Execution Log - 极为直观的节点级数据流视图，可查看每步的 JSON 输入输出。',
+                deployDiff: 'Low - 官方提供成熟的 Docker Compose 镜像，支持自托管。',
+
+                ecosystemScore: 85,
+                complexity: 25,
+                metrics: [85, 50, 90, 95, 60],
+
+                caseTitle: 'IoT 告警自动分级与路由',
+                caseCode: `
+// 伪代码逻辑 (Visual Flow)
+[Webhook: MQTT Alert] 
+  -> [AI Agent: 分析严重等级] 
+  -> [Switch Node]
+      -> Case 'High': [Retry: Call Twilio API (3x)] 
+          -> [If Fail]: [Error Node: Email Admin]
+      -> Case 'Low': [Slack Msg]
+// 优势: 鼠标点选即可配置 API 接口的重试策略
+                `.trim(),
+                caseDesc: '处理 SCADA 系统的海量告警。利用 n8n 的可视化重试机制，当调用短信网关失败时自动重试，确保高危报警必达。通过 Error Trigger 节点构建兜底逻辑（如短信失败转邮件）。',
+                tags: ['Low-Code', 'Automation', 'Visual']
+            },
+            {
+                id: 'llamaindex',
+                name: 'LlamaIndex',
+                ver: 'v0.10.x',
+                releaseDate: '2025.01',
+                stars: '38k+',
+                desc: '数据优先 (Data-First) 的框架，专注于将私有数据接入 LLM。',
+                persona: '数据工程师 / 算法工程师。关注数据清洗 (ETL)、切片 (Chunking) 和检索质量。',
+                stack: 'Python, TS',
+
+                // Maturity & Robustness
+                asyncModel: '强大的异步数据摄取 (Ingestion) 管道。支持并发构建索引。Query Engine 支持异步检索。',
+                retryLogic: '检索级重试。主要体现在 Query 阶段，支持 "RetryQueryEngine" 模式，当检索结果不相关时自动修改 Query 重试。数据管道支持断点续传。',
+                debugTool: 'LlamaTrace (集成 Arize Phoenix) - 专注于 RAG 检索链路的评估与追踪。',
+                deployDiff: 'Medium - 也是以库的形式存在，部署取决于应用架构。',
+
+                ecosystemScore: 80,
+                complexity: 75,
+                metrics: [80, 70, 85, 70, 98], // RAG king
+
+                caseTitle: '故障手册的高级检索 (RAG)',
+                caseCode: `
+# 异步并发构建索引
+import asyncio
+tasks = [build_index(doc) for doc in massive_pdfs]
+await asyncio.gather(*tasks)
+
+# 检索重试策略
+query_engine = RetryQueryEngine(
+    base_engine, 
+    max_retries=3, 
+    evaluator=relevancy_evaluator
+)
+# 优势: 如果第一次检索没找到答案，自动优化关键词再找一次
+                `.trim(),
+                caseDesc: '工厂有数万份 PDF 设备手册和 Excel 维修记录。利用 LlamaIndex 的异步能力快速建立索引。在查询时，如果检索出的文档与问题相关性低（通过 Evaluator 判断），系统会自动改写查询词重试，提高首解率。',
+                tags: ['RAG', 'Data-Centric', 'ETL']
+            },
+            {
+                id: 'crewai',
+                name: 'CrewAI',
+                ver: 'v0.50+',
+                releaseDate: '2024.11',
+                stars: '20k+',
+                desc: '基于角色扮演 (Role-Playing) 的多智能体协作框架。',
+                persona: '中级 Python 开发者 / 极客。关注"团队分工"逻辑，而非底层通信。',
+                stack: 'Python',
+
+                // Maturity & Robustness
+                asyncModel: '支持异步任务委派 (Async Delegation)。Agent 可以将任务丢给同事然后继续做自己的事。底层仍大量依赖 LangChain 的同步/异步机制。',
+                retryLogic: 'Task 级重试。定义 Task 时可直接设置 `max_interations` 或重试逻辑。Agent 之间若沟通失败，通常会陷入循环，鲁棒性略低于显式的图编排。',
+                debugTool: '基础 Logging，可接入 LangSmith。缺乏专门针对多 Agent 交互的可视化调试器。',
+                deployDiff: 'Medium - 主要是长时间运行的脚本，状态保存较弱。',
+
+                ecosystemScore: 70,
+                complexity: 45,
+                metrics: [75, 65, 60, 90, 60],
+
+                caseTitle: '供应链情报多 Agent 分析',
+                caseCode: `
+# 任务级配置
+research_task = Task(
+    description="Analyze copper price trends",
+    agent=researcher,
+    async_execution=True, # 异步执行，不阻塞后续流程
+)
+
+writer_task = Task(
+    description="Write report",
+    agent=writer,
+    context=[research_task] # 等待异步任务完成
+)
+                `.trim(),
+                caseDesc: '模拟采购部门。研究员 Agent 异步爬取铜价数据，库存 Agent 异步检查 SAP 库存。两者都完成后，经理 Agent 进行汇总。CrewAI 的抽象让这种并发协作变得像写剧本一样简单。',
+                tags: ['Multi-Agent', 'Role-Playing', 'Batch-Jobs']
+            },
+            {
+                id: 'ragflow',
+                name: 'RAGFlow',
+                ver: 'v0.12.0',
+                releaseDate: '2025.01',
+                stars: '10k+',
+                desc: '端到端的 RAG 引擎，内置深度文档理解 (DeepDoc/OCR)。',
+                persona: '企业架构师。寻找开箱即用的私有化知识库解决方案。',
+                stack: 'Python, Docker (Service)',
+
+                // Maturity & Robustness
+                asyncModel: '服务级异步。文件解析、向量化都在后台 Worker 队列（基于 Celery/Redis）中异步处理。前端通过 API 轮询状态。',
+                retryLogic: '系统级重试。如果 OCR 服务崩溃，Celery 队列会自动重试任务。作为应用开发者，主要通过配置界面管理，无法像 LangChain 那样编写细粒度代码重试。',
+                debugTool: 'Admin Dashboard - 内置后台，可查看解析状态、Chunk 结果。',
+                deployDiff: 'High - 全套微服务架构 (ES, Redis, MySQL, OCR Model)，资源消耗大。',
+
+                ecosystemScore: 55,
+                complexity: 60,
+                metrics: [60, 40, 50, 80, 95],
+
+                caseTitle: '质检报告自动 OCR 审核',
+                caseCode: `
+// 非代码开发，主要是 API 集成
+POST /api/v1/document/upload
+{ "file": "quality_report.pdf", "run_async": true }
+
+// 响应
+{ "task_id": "123", "status": "processing" }
+// 优势: 内置了复杂的 PDF 表格解析重试和纠错逻辑
+                `.trim(),
+                caseDesc: '处理供应商发来的扫描版质检单。RAGFlow 作为一个黑盒服务运行，自动处理 OCR 识别、表格还原。如果遇到模糊图片，系统内部的 OCR 模型会自动尝试不同的图像增强预处理。',
+                tags: ['Deep-OCR', 'Enterprise', 'Engine']
+            }
+        ];
+
+        const personas = [
+            { id: 'python', label: 'Backend / AI Eng', icon: '🐍', stack: 'Python' },
+            { id: 'frontend', label: 'Frontend / Fullstack', icon: '⚛️', stack: 'JS/TS' },
+            { id: 'data', label: 'Data / RAG Eng', icon: '📊', stack: 'Data' },
+            { id: 'ops', label: 'DevOps / Low-Code', icon: '⚙️', stack: 'Ops' }
+        ];
+
+        let activeFrameworkId = 'langchain';
+        let activePersona = 'python';
+        let radarChart = null;
+        let scatterChart = null;
+
+        function init() {
+            renderFilters();
+            filterAndRenderList();
+            initCharts();
+            updateDetail(activeFrameworkId);
+        }
+
+        function renderFilters() {
+            const container = document.getElementById('persona-filters');
+            container.innerHTML = personas.map(p => `
+                <button onclick="setPersona('${p.id}')" 
+                    class="w-full text-left px-3 py-2 rounded flex items-center justify-between text-xs transition-colors ${p.id === activePersona ? 'bg-blue-600 text-white shadow-md font-medium' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}"
+                >
+                    <span class="flex items-center gap-2"><span>${p.icon}</span> ${p.label}</span>
+                    ${p.id === activePersona ? '<i class="ph-bold ph-check"></i>' : ''}
+                </button>
+            `).join('');
+        }
+
+        function filterAndRenderList() {
+            const filtered = frameworks.filter(f => {
+                if (activePersona === 'python') return f.stack.includes('Python');
+                if (activePersona === 'frontend') return f.stack.includes('TS') || f.stack.includes('JS');
+                if (activePersona === 'data') return f.tags.includes('Data-Centric') || f.tags.includes('RAG') || f.tags.includes('Database');
+                if (activePersona === 'ops') return f.tags.includes('Low-Code') || f.tags.includes('Engine');
+                return true;
+            });
+
+            document.getElementById('count-badge').innerText = filtered.length;
+            const listContainer = document.getElementById('framework-list');
+            
+            if(filtered.length === 0) {
+                listContainer.innerHTML = `<div class="p-8 text-center text-slate-400 text-xs border border-dashed border-slate-300 rounded">No frameworks match this stack.</div>`;
+                return;
+            }
+
+            listContainer.innerHTML = filtered.map(f => `
+                <div onclick="selectFramework('${f.id}')" 
+                     class="tech-card bg-white p-3 rounded-lg cursor-pointer flex justify-between items-start ${f.id === activeFrameworkId ? 'active' : ''}">
+                    <div>
+                        <div class="flex items-center gap-2 mb-1">
+                            <h4 class="font-bold text-slate-800 text-sm">${f.name}</h4>
+                            ${f.releaseDate.includes('2025') ? '<span class="text-[9px] bg-green-100 text-green-700 px-1 rounded font-bold">NEW</span>' : ''}
+                        </div>
+                        <div class="flex gap-1 flex-wrap">
+                            ${f.tags.slice(0,2).map(t => `<span class="text-[9px] text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 font-medium">${t}</span>`).join('')}
+                        </div>
+                    </div>
+                    <div class="text-right pl-2">
+                         <div class="text-[9px] text-slate-400 font-mono">Ver</div>
+                         <div class="text-[10px] font-bold text-slate-600 font-mono">${f.ver}</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            if (!filtered.find(f => f.id === activeFrameworkId) && filtered.length > 0) {
+                selectFramework(filtered[0].id);
+            }
+        }
+
+        function selectFramework(id) {
+            activeFrameworkId = id;
+            filterAndRenderList(); 
+            updateDetail(id);
+        }
+
+        function setPersona(id) {
+            activePersona = id;
+            renderFilters();
+            filterAndRenderList();
+        }
+
+        function updateDetail(id) {
+            const f = frameworks.find(fw => fw.id === id);
+            if (!f) return;
+
+            document.getElementById('detail-title').innerText = f.name;
+            document.getElementById('detail-ver').innerText = f.ver;
+            document.getElementById('detail-date').innerText = f.releaseDate;
+            document.getElementById('detail-stars').innerHTML = `<i class="ph-fill ph-star text-yellow-500"></i> ${f.stars}`;
+            document.getElementById('detail-desc').innerText = f.desc;
+            
+            document.getElementById('detail-tags').innerHTML = f.tags.map(t => 
+                `<span class="badge badge-blue bg-blue-50 text-blue-700 border border-blue-100">${t}</span>`
+            ).join('');
+
+            // Robustness Fields
+            document.getElementById('detail-async').innerText = f.asyncModel;
+            document.getElementById('detail-retry').innerText = f.retryLogic;
+            document.getElementById('detail-debug').innerText = f.debugTool;
+            document.getElementById('detail-deploy').innerText = f.deployDiff;
+            
+            // Factory Case
+            document.getElementById('case-title').innerText = f.caseTitle;
+            document.getElementById('case-desc').innerText = f.caseDesc;
+            document.getElementById('case-code').innerText = f.caseCode;
+
+            updateRadar(f);
+        }
+
+        // --- Charts ---
+        function initCharts() {
+            // Radar
+            const ctxRadar = document.getElementById('radarChart').getContext('2d');
+            radarChart = new Chart(ctxRadar, {
+                type: 'radar',
+                data: {
+                    labels: ['生态完善度', '灵活/扩展', '工具/调试', '易用性', 'RAG能力'],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: '#e2e8f0' },
+                            grid: { color: '#e2e8f0' },
+                            pointLabels: { font: { size: 10, family: "'Inter', sans-serif" }, color: '#64748b' },
+                            suggestedMin: 0, suggestedMax: 100,
+                            ticks: { display: false }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Scatter
+            const ctxScatter = document.getElementById('scatterChart').getContext('2d');
+            const dataPoints = frameworks.map(f => ({
+                x: f.complexity, y: f.ecosystemScore, label: f.name, id: f.id
+            }));
+
+            scatterChart = new Chart(ctxScatter, {
+                type: 'bubble',
+                data: {
+                    datasets: [{
+                        label: 'Frameworks',
+                        data: dataPoints,
+                        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                        borderColor: '#2563eb',
+                        borderWidth: 1,
+                        pointRadius: 5,
+                        hoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: 10 },
+                    scales: {
+                        x: { 
+                            title: { display: true, text: '代码复杂度 (Low -> High)', color: '#94a3b8', font: {size: 9} }, 
+                            min: 10, max: 100,
+                            grid: { color: '#f1f5f9' },
+                            ticks: { font: {size: 9} }
+                        },
+                        y: { 
+                            title: { display: true, text: '生态完善度 (Low -> High)', color: '#94a3b8', font: {size: 9} }, 
+                            min: 40, max: 100,
+                            grid: { color: '#f1f5f9' },
+                            ticks: { font: {size: 9} }
+                        }
+                    },
+                    plugins: {
+                        tooltip: { callbacks: { label: (c) => c.raw.label } },
+                        legend: { display: false }
+                    },
+                    onClick: (e, activeEls) => {
+                        if(activeEls.length > 0) selectFramework(dataPoints[activeEls[0].index].id);
+                    }
+                }
+            });
+        }
+
+        function updateRadar(f) {
+            radarChart.data.datasets = [{
+                label: f.name,
+                data: f.metrics,
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                borderColor: '#3b82f6',
+                pointBackgroundColor: '#3b82f6',
+                borderWidth: 1.5,
+                pointRadius: 3
+            }];
+            radarChart.update();
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
+
+    </script>
+</body>
+</html>

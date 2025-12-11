@@ -1,0 +1,73 @@
+{
+    "chatInput": "把 P45098 的数量改为 200",
+    "sessionId": "demo",
+    "appState": {
+        "currentPage": "inventory",
+        "pageData": [
+            {
+                "addin ": {
+                    "id":"revInput",
+                    "type":"textInput",
+                    "label":"版本"
+                },
+                "dbkey": "rev",
+                "value": "A01"
+            },
+            {
+                "addin": {
+                    "id":"customerSelect",
+                    "type":"select",
+                    "label":"客户",
+                    "options":[
+                        {"value":"C001","label":"客户一"},
+                        {"value":"C002","label":"客户二"},
+                        {"value":"C003","label":"客户三"}
+                    ]
+                },
+                "dbkey": "customer",
+                "value": "ZJTD"
+            },
+            {
+                "addin": {
+                    "id":"customerSelect",
+                    "type":"select",
+                    "label":"客户",
+                    "options":[
+                        {"value":"C001","label":"客户一"},
+                        {"value":"C002","label":"客户二"},
+                        {"value":"C003","label":"客户三"}
+                    ]
+                },
+                "dbkey": "customer",
+                "value": "ZJTD"
+            }
+        ],
+        "userInfo": {
+            "oid": "user-12345",
+            "username": "test_user",
+            "displayName": "测试用户"
+        }
+    },
+    "tools":{
+        "hitltoos":[
+            {
+                "name":"inventory_manager",
+                "description":"用于管理和更新库存数据的工具。",
+                "parameters":{
+                    "product_id":"P45098",
+                    "new_quantity":200
+                }
+            }
+        ],
+        "dwftools":[
+            {
+                "name":"order_manager",
+                "description":"用于处理订单的tool。",
+                "parameters":{
+                    "order_id":"O12345",
+                    "status":"shipped"
+                }
+            }
+        ]
+    }
+}
