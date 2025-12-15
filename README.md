@@ -1,5 +1,9 @@
 # ag-ui_Learning
 
+> 📌 **当前分支 / Current Branch**: `demo` - 这是一个演示分支，包含完整的智能表单填写助手示例代码。
+>
+> 📌 **Current Branch**: `demo` - This is a demo branch containing the complete smart form-filling assistant example code.
+
 ## 智能表单填写助手 Demo / Smart Form Assistant Demo
 
 这是一个用于学习 ag-ui 和 CopilotKit 的演示项目，展示了如何实现 UI 组件与 AI Agent 共享状态的智能表单填写助手。
